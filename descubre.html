@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <script src="https://unpkg.com/ml5@0.4.0/dist/ml5.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+    <style>
+        .ventanaVideo {
+            text-align: center;
+            background-color: rgb(69, 238, 111);
+        }
+
+        .header {
+            height: 90px;
+            width: 100%;
+            top: 0;
+            left: 0;
+            background-color: rgb(105, 240, 138);
+            padding-left: 20px;
+        }
+
+        #title {
+            color: orangered;
+            padding-left: 20px;
+            font-size: 32px;
+        }
+
+        #motto {
+            margin-left: 150px;
+            color: orange;
+            font-style: italic;
+        }
+
+        #comenzarBusqueda {
+            margin-top: 50%;
+        }
+
+        .ventanaDescubrir {
+            height: 100%;
+            background-color: rgb(105, 240, 138);
+        }
+
+        .btn-form {
+            margin-top: 1%;
+        }
+
+        .btn-back {
+            margin-left: 5%;
+        }
+
+        .aprendizaje {
+            margin-left: 5%;
+        }
+
+        .busqueda {
+            margin-left: 5%;
+
+        }
+
+        .botonesExtras {
+            margin-left: 5%;
+        }
+        
+        .btn-regresar {
+            margin-left: 5%;
+        }
+
+        .objeto {
+            margin-left: 5%;
+        }
+
+        .clase {
+            margin-left: 5%;
+            padding-top: 33%;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ventanaDescubrir">
+        <div class="header">
+            <nav>
+                <img src="./static/ICONO.jpg" >
+                <a class="navbar-brand text-align-center" id="title">Who is the flower?</a>
+                <br>
+                <a class="motto text-align-center" id="motto"> The World Is Beatiful</a>
+            </nav>
+        </div>
+        <!-- -->
+        <di>
+            <table>
+                <tr>
+                    <td>
+                        <div class="ventanaVideo"|>
+                            <h2 style="color: black;">¡Cual es la flor!</h2>
+                            <video id="contenedorVideo" width="1024" height="720" autoplay></video>
+                            <br>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="objeto">
+                            <input id="label" type="text" name="nombreAprendizaje" placeholder="¿Muestrame la flor?">
+                        </div>
+                        <br>
+                        <div class="aprendizaje">
+                            <button id="comenzarAprendizaje" class="btn btn-warning btn-lg">Aprender</button>
+                        </div>
+                        <div class="clase">
+                            <h3 id="class"></h3>
+                        </div>
+                        <div class="busqueda">
+                            <button id="comenzarBusqueda" class="btn btn-warning ">Iniciar búsqueda</button>
+                        </div>
+                        <br>
+                        <div class="botonesExtras">
+                            <button id = "btCargar" class="btn btn-warning btn-lg btn-form">Load</button>
+                            <button id = "btGuardar" class="btn btn-warning btn-lg btn-form">Save</button>
+                        </div>
+                        <br>
+                    </td>
+                </tr>
+            </table>
+        </di>
+        <!-- -->
+    </div>
+    <script>
+        let video
+        let featureExtractor;
+        const clasificadorKnn = ml5.KNNClassifier()
+        let img
+        async function setup() {
+            featureExtractor = ml5.featureExtractor('MobileNet', modelReady)
+            //Se crea un elemento de video 
+            video = document.getElementById('contenedorVideo');
+            //Se crea la captura
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: true
+            })
+            video.srcObject = stream
+            video.play()
+        }
+        setup().then(() => {
+            createButtons()
+        })
+        function createButtons() {
+            buttonAprender = document.querySelector('#comenzarAprendizaje')
+            buttonAprender.addEventListener('click', function () {
+                console.log(document.getElementById('label').value)
+                agregarTrainingSet(document.getElementById('label').value)
+            })
+            buttonPredecir = document.querySelector('#comenzarBusqueda')
+            buttonPredecir.addEventListener('click', function () {
+                classify()
+            })
+            buttonCargar = document.querySelector('#btCargar')
+            buttonCargar.addEventListener('click',function(){
+                loadKNN()
+            })
+            buttonGuardar = document.querySelector('#btGuardar')
+            buttonGuardar.addEventListener('click',function(){
+                saveKNN()
+            })
+        }
+        function modelReady() {
+            console.log('Modelo cargado!')
+        }
+        function videoListo() {
+            console.log('Clasificando video!')
+        }
+        function getData(data) {
+            let output = document.getElementById("class");
+            output.innerHTML = data;
+        }
+        //AQUI SE CREARA EL TRAINING SET Y SE AGREGARAN  LOS EJEMPLOS AL CLASIFICADOR
+        function agregarTrainingSet(label) {
+            const features = featureExtractor.infer(video)
+            clasificadorKnn.addExample(features, label)
+            console.log(clasificadorKnn.getNumLabels())
+        }
+        async function classify() {
+            //Se obtiene la captura del video 
+            const features = await featureExtractor.infer(video)
+            //Se clasifica
+            clasificadorKnn.classify(features, gotResults)
+        }
+        function gotResults(error, results) {
+            if (error) {
+                console.error(error);
+            } else {
+                const confidences = results.confidencesByLabel;
+                if (results.confidencesByLabel) {
+                    getData(results.label);
+                }
+            }
+            classify()
+        }
+        function saveKNN() {
+            clasificadorKnn.save('KNNDataset')
+        }
+        function loadKNN() {
+            clasificadorKnn.load('./KNNDataset');
+            console.log(clasificadorKnn);
+        }   
+    </script>
+</body>
+</html>
